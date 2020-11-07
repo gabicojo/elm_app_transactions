@@ -1,0 +1,427 @@
+/*
+  elm-hot creates an additional div wrapper around the app to make HMR possible.
+  This could break styling in development mode if you are using Elm UI.
+
+  More context in the issue:
+    https://github.com/halfzebra/create-elm-app/issues/320
+*/
+[data-elm-hot="true"] {
+  height: inherit;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+
+body {
+  /*background-color: #ffe;*/
+  font-family: "Open Sans",Roboto, Lato, system-ui;
+  font-size: 90%;
+  width: 67%;
+  margin: auto;
+}
+
+h5 {
+  margin-bottom: 5px;
+}
+
+button {
+  font-size: inherit;
+  background-color: rgb(24,158,242);
+  color: white;
+  /*width: 20%;*/
+  padding: 7px;
+  border: 1px solid #333;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* TABLE */
+
+table {
+  border-collapse: collapse;
+  width: 80%;
+}
+
+th {
+  text-align: left;
+  padding: 7px;
+  cursor: pointer;
+}
+
+
+tr {
+  border-bottom: 1px solid black;
+}
+
+
+td {
+  padding: 7px;
+
+}
+
+.tbl-header {
+  background-color: rgb(229,235,239);
+}
+
+
+.container {
+  background-color: #eee;
+  padding: 7px;
+  border-radius: 3px;
+  /*margin-bottom: 17px;*/
+  /*border-bottom: 1px solid black;*/
+}
+.main {
+  /*padding: 7px;*/
+}
+
+.border-gray {
+  border: 1px solid #777;
+  border-radius: 3px;
+  margin-bottom: 17px;
+}
+
+.gray {
+  background-color: #ddd;
+  /*padding: 7px;*/
+}
+
+.padd-7 {
+  padding: 7px;
+}
+
+.padd-l-7 {
+  padding-left: 7px;
+}
+
+.padd-t-7 {
+  padding-top: 7px;
+}
+
+.sw-body {
+  display: inline-block;
+  background-color: #eee;
+  width: 34px;
+  height: 19px;
+  border-radius: 10px;
+  border: 1px solid #777;
+  cursor: pointer;
+  /*margin-top: 10px;*/
+  margin-right: 7px;
+}
+.sw-button {
+  margin: 1px;
+  background-color: #999;
+  width: 15px;
+  height: 15px;
+  border: 1px solid black;
+  border-radius: 8px;
+}
+
+.active {
+  background-color: #46f;
+}
+
+.fl-right {
+  background-color: white;
+  /*float: right;*/
+  margin-left: 17px;
+}
+
+.form {
+  width: 67%;
+  padding-left: 17px;
+  border: 2px solid #ddd;
+  border-radius: 7px;
+  margin-bottom: 17px;
+
+}
+
+input {
+  font-size: 110%;
+  border: 1px solid green;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  padding: 7px;
+}
+
+.invalid-input {
+  border: 1px solid red;
+}
+
+.red {
+  background-color: red;
+}
+
+::placeholder {
+  color: #bbb;
+};
+
+.nav-link {
+  display: inline-block;
+  text-decoration: none;
+  background-color: blue;
+  color: white;
+}
+
+.navigation {
+  /*width: inherit;*/
+  /*height: 30px;*/
+  background-color: rgb(24,158,242);
+  border-radius: 3px;
+  /*padding-top: 2px;*/
+  padding: 7px;
+  color: white;
+}
+
+.footer {
+  /*width: inherit;*/
+  background-color: rgb(54,88,164);
+  border-radius: 3px;
+  padding: 7px;
+  color: white;
+}
+
+/* ANCHOR */
+
+
+a {
+  margin-right: 17px;
+  color: white;
+  font-weight: 500;
+}
+
+a.tr-list {
+  color: rgb(220,15,62);
+}
+
+
+a:link {
+  text-decoration: none;
+}
+
+a:visited {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+  color: #ddd;
+}
+
+a:active {
+  text-decoration: none;
+}
+
+/* TRANSACTIONS */
+
+
+.grid-1-1 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /*width: 80%;*/
+}
+
+.grid-1-2 {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  /*width: 80%;*/
+}
+
+.grid-1-3 {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  /*width: 80%;*/
+}
+
+.field-name {
+  grid-column: 1;
+}
+
+.field-value {
+  grid-column: 2;
+}
+ 
+.tr-search {
+  border: 1px solid #777;
+  padding: 17px;
+  width: 80%;
+  margin-bottom: 17px;
+}
+
+#tr-top {
+  display: grid;
+  grid-template-columns: 1fr 12fr 7fr;
+  background-color: rgb(229,239,252);
+  padding: 7px;
+  /*border: 1px solid green;*/
+}
+
+#tr-top-arrow {
+  grid-column: 1;
+  /*background-color: rgb(54,88,164);*/
+  color: white;
+  font-size: 300%;
+  justify-self: center;
+  align-self: center;
+  cursor: pointer;
+}
+
+#tr-top-arrow p {
+  margin: none;
+  padding: none;
+  text-align: center;
+}
+
+#tr-top-info {
+  grid-column: 2;
+  padding-left: 17px;
+}
+
+#tr-top-info h3,p {
+  /*grid-column: 2;*/
+  margin: 0;
+}
+
+#tr-top-buttons {
+  grid-column: 3;
+  align-self: bottom;
+}
+
+#tr-bottom {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  /*background-color: rgb(229,239,252);*/
+  /*border: 1px solid green;*/
+}
+
+#tr-bread-crumb {
+  grid-column: 1;
+  padding-left: 17px;
+  padding-top: 17px;
+  /*justify-self: center;*/
+}
+
+
+#tr-bottom-main {
+  grid-column: 2;
+  padding-left: 17px;
+  padding-top: 17px;
+}
+
+
+/* MODAL */
+
+
+.tr-detail {
+  position: fixed;
+  background-color: #ccc;
+  width: 70%;
+  height: 80%;
+  left: 15%;
+  top: 10%;
+  padding: 17px;
+  transition: top 1s;
+}
+
+.shifted {
+  top: -110%;
+}
+
+.static {
+  background-color: rgb(229,239,252);
+  padding: 17px;
+  margin-top: 17px;
+}
+
+.static h3 {
+  margin-top: 0;
+}
+
+.footer p {
+  margin: none;
+  padding: none;
+}
+
+span.footer-entry {
+  display: inline-block;
+  /*background-color: red;*/
+  margin-right: 27px;
+}
+
+/* SHAPES */
+
+.trapezoid {
+  border-bottom: 40px solid rgb(229,235,239);;
+  border-left: 40px solid transparent;
+  height: 0;
+  width: inherit;
+}
+
+/* GRID */
+
+.container-grid-search {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  width: 80%;
+}
+
+
+
+
+.container-cols-2 {
+  display: grid;
+  grid-template-columns: 1fr 5fr;
+}
+
+.item-tr-search {
+  grid-column: 1;
+  /*justify-self: center;*/ 
+}
+
+
+.item-button {
+  justify-self: right;
+  align-self: center;
+}
+
+
+
+.item-title {
+  grid-column: 1;
+  justify-self: center;
+  align-self: center;
+  font-size: 150%;
+}
+
+.item-login {
+  grid-column: 2;
+}
+
+
+.item-login-abs {
+  position: absolute;
+  top: 9px;
+  right: 279px;
+}
+
+.hidden {
+  display: none;
+}
+
+
+/* TRANSACTION VIEWS STYLES */
+
+.bc-active {
+  background-color: rgb(70,188,242);
+  font-weight: 700;
+}
+
+.tr-bread-crumb p {
+  margin: 9px;
+  cursor: pointer;
+}

@@ -1,0 +1,29 @@
+Disbursement
+  payee : Payee
+  payoutAmount : Float
+  payMethod : PayMethod
+  payAccount : String
+  completed : Maybe Posix -- timestamp in miliseconds; Nothing means the disbursement is not done
+
+
+Payee
+  payeeType : PayeeType
+  payeeName : String
+  payeeEmail : String
+  payeeAddress : Address
+
+
+
+PayeeType = Mortgagee | LandTransfer | PropertyTax
+
+
+PayMethod = Cheque | WireTransfer
+
+Address
+  street : String
+  city : String
+  province : String
+  postalCode : String
+
+
+
