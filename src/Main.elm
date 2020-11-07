@@ -146,6 +146,7 @@ update msg model =
 
 -- VIEW
 -- main role of view is to orchestrate what "components" are visible at any time
+-- it does that by pattern matching viewMode field in model; like routing
 
 
 view : Model -> Html Msg
@@ -162,7 +163,7 @@ view model =
                 [ viewTop t
                 , div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
-                    , viewReview model.viewMode
+                    , viewReview model
                     ]
                 ]
 
@@ -230,7 +231,7 @@ view model =
             div [ class "main" ]
                 [ div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
-                    , viewReview model.viewMode
+                    , viewReview model
                     ]
                 ]
 
@@ -315,9 +316,9 @@ viewBCNewT s =
         ]
 
 
-viewReview : ViewMode -> Html Msg
-viewReview vm =
-    case vm of
+viewReview : Model -> Html Msg
+viewReview model =
+    case model.viewMode of
         ViewTransactionsList ->
             div [] []
 
@@ -377,6 +378,26 @@ viewReview vm =
         ViewNewT s nt ->
             div [ class "tr-main" ]
                 [ p [] [ text <| "Lawyer/Notary: " ++ "Keith Smith" ] ]
+
+
+viewReviewLawyer : Stage -> Transaction -> Html Msg
+viewReviewLawyer s t =
+    div [ class "grid-1-1 border-gray" ]
+        [ div []
+            [ p [ class "gray padd-7" ] [ b [] [ text "Lawyer/Notary" ] ]
+            , p [ class "padd-l-7 padd-t-7" ] [ text "Lawyer/Notary" ]
+            , p [ class "padd-l-7" ] [ b [] [ text <| String.fromInt t.id ] ]
+            , p [ class "padd-l-7 padd-t-7" ] [ text "Acting for" ]
+            , p [ class "padd-l-7" ] [ b [] [ text "Purchaser" ] ]
+            ]
+        , div []
+            [ p [ class "gray padd-7" ] [ b [] [ text "Other Lawyer/Notary" ] ]
+            , p [ class "padd-l-7 padd-t-7" ] [ text "Lawyer/Notary" ]
+            , p [ class "padd-l-7" ] [ b [] [ text <| String.fromInt t.id ] ]
+            , p [ class "padd-l-7 padd-t-7" ] [ text "Acting for" ]
+            , p [ class "padd-l-7" ] [ b [] [ text "Vendor" ] ]
+            ]
+        ]
 
 
 viewDisbursements : ViewMode -> Html Msg

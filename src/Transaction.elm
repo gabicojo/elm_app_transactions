@@ -139,7 +139,10 @@ sortFunction s =
 type TransType
     = Sale
     | Purchase
-    | Refinance
+
+
+
+--| Refinance
 
 
 transTypeToString : TransType -> String
@@ -151,8 +154,10 @@ transTypeToString tt =
         Purchase ->
             "Purchase"
 
-        Refinance ->
-            "Refinance"
+
+
+--Refinance ->
+--    "Refinance"
 
 
 type Either a b
@@ -178,7 +183,7 @@ type alias NewTransaction =
 
 type alias Transaction =
     { id : Int
-    , userId : Int
+    , user : User
     , transType : TransType
     , client : String
     , property : String
@@ -201,7 +206,7 @@ type TransFilter
 
 belongsToId : Id -> Transaction -> Bool
 belongsToId id t =
-    id == t.userId
+    id == t.user.userId
 
 
 
@@ -264,22 +269,32 @@ type alias User =
 --DATA
 
 
+sam : User
+sam =
+    User 1 17 "Sam Klein" "sam@test.com"
+
+
+keith : User
+keith =
+    User 2 17 "Keith Roy" "keith@test.com"
+
+
 initialUsers : List User
 initialUsers =
-    [ User 1 17 "Sam Klein" "sam@test.com" -- currently logged user
-    , User 2 17 "Keith Roy" "keith@test.com"
+    [ sam -- currently logged user
+    , keith
     ]
 
 
 initialTransactions : List Transaction
 initialTransactions =
-    [ Transaction 1 1 Sale "Petra Morgan" "123 Water Street" "2020/09/20" Draft []
-    , Transaction 2 2 Purchase "Kaila Hemsworth" "4518 Lockhart Dr." "2020/08/13" DepositReq []
-    , Transaction 3 1 Purchase "Imran Harper" "2001 Falon Drive" "2022/06/27" Draft []
-    , Transaction 4 2 Sale "Cheyene Booker" "2290 Island Hwy" "2023/11/05" SignatureReq []
-    , Transaction 5 2 Refinance "Aaron Humphries" "2872 Rogers Road" "2021/07/09" Draft []
-    , Transaction 6 1 Sale "Karol Johnson" "73 Somerset Dr." "2021/01/01" DepositReq []
-    , Transaction 7 1 Refinance "Johnny Cash" "171 Simcoe Lake Road" "2020/12/19" Draft []
+    [ Transaction 1 sam Sale "Petra Morgan" "123 Water Street" "2020/09/20" Draft []
+    , Transaction 2 keith Purchase "Kaila Hemsworth" "4518 Lockhart Dr." "2020/08/13" DepositReq []
+    , Transaction 3 sam Purchase "Imran Harper" "2001 Falon Drive" "2022/06/27" Draft []
+    , Transaction 4 keith Sale "Cheyene Booker" "2290 Island Hwy" "2023/11/05" SignatureReq []
+    , Transaction 5 sam Purchase "Aaron Humphries" "2872 Rogers Road" "2021/07/09" Draft []
+    , Transaction 6 keith Sale "Karol Johnson" "73 Somerset Dr." "2021/01/01" DepositReq []
+    , Transaction 7 sam Purchase "Johnny Cash" "171 Simcoe Lake Road" "2020/12/19" Draft []
     ]
 
 
