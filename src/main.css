@@ -32,7 +32,6 @@ button {
   font-size: inherit;
   background-color: rgb(24,158,242);
   color: white;
-  /*width: 20%;*/
   padding: 7px;
   border: 1px solid #333;
   border-radius: 3px;
@@ -43,7 +42,7 @@ button {
 
 table {
   border-collapse: collapse;
-  width: 80%;
+  width: 90%;
 }
 
 th {

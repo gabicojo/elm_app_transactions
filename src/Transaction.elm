@@ -1,5 +1,7 @@
 module Transaction exposing (..)
 
+--import Data exposing (..)
+
 import Time
 
 
@@ -15,10 +17,18 @@ type alias Payee =
     }
 
 
+type alias Lawyer =
+    { lawyerName : String
+    , lawyerCompany : String
+    , lawyerAddress : Address
+    }
+
+
 type alias Address =
     { street : String
     , city : String
-    , province : String
+
+    --, province : String
     , postalCode : String
     }
 
@@ -130,7 +140,7 @@ sortFunction s =
             .client
 
         PropertySort ->
-            .property
+            \t -> t.property.street
 
         ClosingSort ->
             .closing
@@ -186,11 +196,23 @@ type alias Transaction =
     , user : User
     , transType : TransType
     , client : String
-    , property : String
+    , property : Address
     , closing : String
     , status : TransStatus
+    , otherLawyer : Lawyer
+    , otherClient : String -- the other person involved in transaction
     , disbursements : List Disbursement
     }
+
+
+type TrField
+    = ClientF
+    | OtherClientF
+
+
+setTransClient : String -> Transaction -> Transaction
+setTransClient str t =
+    { t | client = str }
 
 
 type TransFilter
@@ -215,7 +237,7 @@ belongsToId id t =
 
 transactionToString : Transaction -> String
 transactionToString t =
-    String.join " " [ t.client, t.property, t.closing ] |> String.toLower
+    String.join " " [ t.client, t.property.street, t.property.city, t.closing ] |> String.toLower
 
 
 transactionContains : String -> Transaction -> Bool
@@ -255,6 +277,25 @@ selectTransaction id lts =
                 selectTransaction id rest
 
 
+
+--maxId : Id
+--nextId : List Transaction -> Id
+--nextId lts =
+--    let lIds = List.map (\t -> t.id) lts
+--    case lIds of
+--        [] -> 1
+--        _ -> 1 + max_ lIds
+
+
+nextId : List Transaction -> Id
+nextId lts =
+    List.map (\t -> t.id) lts
+        |> List.maximum
+        |> Maybe.withDefault 0
+        --|> Basics.floor
+        |> (+) 1
+
+
 type alias User =
     { userId : Int
     , orgId : Int
@@ -266,7 +307,68 @@ type alias User =
 
 
 
---DATA
+--*** DATA ***
+
+
+address1 : Address
+address1 =
+    { street = "123 Don Mills Rd."
+    , city = "Toronto"
+    , postalCode = "M1V 2J7"
+    }
+
+
+address2 : Address
+address2 =
+    { street = "79 Faywood Boulevard"
+    , city = "Vancouver"
+    , postalCode = "V1Z 9P6"
+    }
+
+
+address3 : Address
+address3 =
+    { city = "Toronto"
+    , street = "127 University Boulevard"
+    , postalCode = "M3F 7A9"
+    }
+
+
+address4 : Address
+address4 =
+    { city = "Toronto"
+    , street = "731 Yonge Street"
+    , postalCode = "M17 7G3"
+    }
+
+
+address5 : Address
+address5 =
+    { city = "Vancouver"
+    , street = "123 Harbour Street"
+    , postalCode = "V0V 0V0"
+    }
+
+
+address6 : Address
+address6 =
+    { city = "Hamilton"
+    , street = "17 Passage Way"
+    , postalCode = "H3T 5B9"
+    }
+
+
+address7 : Address
+address7 =
+    { city = "Barrie"
+    , street = "1 Commonwealth Rd."
+    , postalCode = "B7R 1D5"
+    }
+
+
+emptyAddress : Address
+emptyAddress =
+    Address "" "" ""
 
 
 sam : User
@@ -288,14 +390,116 @@ initialUsers =
 
 initialTransactions : List Transaction
 initialTransactions =
-    [ Transaction 1 sam Sale "Petra Morgan" "123 Water Street" "2020/09/20" Draft []
-    , Transaction 2 keith Purchase "Kaila Hemsworth" "4518 Lockhart Dr." "2020/08/13" DepositReq []
-    , Transaction 3 sam Purchase "Imran Harper" "2001 Falon Drive" "2022/06/27" Draft []
-    , Transaction 4 keith Sale "Cheyene Booker" "2290 Island Hwy" "2023/11/05" SignatureReq []
-    , Transaction 5 sam Purchase "Aaron Humphries" "2872 Rogers Road" "2021/07/09" Draft []
-    , Transaction 6 keith Sale "Karol Johnson" "73 Somerset Dr." "2021/01/01" DepositReq []
-    , Transaction 7 sam Purchase "Johnny Cash" "171 Simcoe Lake Road" "2020/12/19" Draft []
-    ]
+    [ t1, t2, t3, t4, t5, t6, t7 ]
+
+
+t7 : Transaction
+t7 =
+    { id = 7
+    , user = sam
+    , transType = Purchase
+    , client = "Johnny Cash"
+    , property = address7
+    , closing = "2020/12/19"
+    , status = Draft
+    , otherLawyer = lawyer7
+    , otherClient = "Cruela DeVille"
+    , disbursements = []
+    }
+
+
+t6 : Transaction
+t6 =
+    { id = 6
+    , user = keith
+    , transType = Sale
+    , client = "Karol Johnson"
+    , property = address6
+    , closing = "2021/01/01"
+    , status = DepositReq
+    , otherLawyer = lawyer6
+    , otherClient = "Donald Trump"
+    , disbursements = []
+    }
+
+
+t5 : Transaction
+t5 =
+    { id = 5
+    , user = sam
+    , transType = Purchase
+    , client = "Aaron Humphries"
+    , property = address5
+    , closing = "2023/11/05"
+    , status = Draft
+    , otherLawyer = lawyer5
+    , otherClient = "Mary Poppins"
+    , disbursements = []
+    }
+
+
+t4 : Transaction
+t4 =
+    { id = 4
+    , user = keith
+    , transType = Sale
+    , client = "Cheyene Booker"
+    , property = address4
+    , closing = "2023/11/05"
+    , status = SignatureReq
+    , otherLawyer = lawyer4
+    , otherClient = "Carlos Ramos"
+    , disbursements = []
+    }
+
+
+t1 : Transaction
+t1 =
+    { id = 1
+    , user = sam
+    , transType = Sale
+    , client = "Petra Morgan"
+    , property = address1
+    , closing = "2020/09/20"
+    , status = Draft
+    , otherLawyer = lawyer1
+    , otherClient = "Nancy Drew"
+    , disbursements = []
+    }
+
+
+t2 : Transaction
+t2 =
+    { id = 2
+    , user = keith
+    , transType = Purchase
+    , client = "Kaila Hemsworth"
+    , property = address2
+    , closing = "2020/08/13"
+    , status = DepositReq
+    , otherLawyer = lawyer2
+    , otherClient = "Caroline Wozniaki"
+    , disbursements = []
+    }
+
+
+t3 : Transaction
+t3 =
+    { id = 3
+    , user = sam
+    , transType = Purchase
+    , client = "Imran Harper"
+    , property = address3
+    , closing = "2022/06/07"
+    , status = Draft
+    , otherLawyer = lawyer3
+    , otherClient = "Lily Loevens"
+    , disbursements = []
+    }
+
+
+
+-- **** PAYEE
 
 
 payee1 : Payee
@@ -307,7 +511,6 @@ payee1 =
         { city = "Vancouver"
         , street = "123 Harbour Street"
         , postalCode = "V0V 0V0"
-        , province = "British Columbia"
         }
     }
 
@@ -321,7 +524,6 @@ payee2 =
         { city = "Toronto"
         , street = "731 Yonge Street"
         , postalCode = "M17 7G3"
-        , province = "Ontario"
         }
     }
 
@@ -335,6 +537,87 @@ payee3 =
         { city = "Toronto"
         , street = "127 University Boulevard"
         , postalCode = "M3F 7A9"
-        , province = "Ontario"
         }
+    }
+
+
+payee4 : Payee
+payee4 =
+    { payeeType = PropertyTax
+    , payeeName = "TD Bank"
+    , payeeEmail = "td_bank@tdb.ca"
+    , payeeAddress = address2
+    }
+
+
+payee5 : Payee
+payee5 =
+    { payeeType = Mortgagee
+    , payeeName = "RBC Royal Bank"
+    , payeeEmail = "office@rbc.org"
+    , payeeAddress = address1
+    }
+
+
+lawyer1 : Lawyer
+lawyer1 =
+    { lawyerName = "Mark Strong"
+    , lawyerCompany = "Barnes & Associates"
+    , lawyerAddress = address7
+    }
+
+
+lawyer2 : Lawyer
+lawyer2 =
+    { lawyerName = "Karl Letonja"
+    , lawyerCompany = "Properties LLC."
+    , lawyerAddress = address1
+    }
+
+
+lawyer3 : Lawyer
+lawyer3 =
+    { lawyerName = "John McIrvine"
+    , lawyerCompany = "Properties LLC."
+    , lawyerAddress = address2
+    }
+
+
+lawyer4 : Lawyer
+lawyer4 =
+    { lawyerName = "John McIrvine"
+    , lawyerCompany = "Properties LLC."
+    , lawyerAddress = address5
+    }
+
+
+lawyer5 : Lawyer
+lawyer5 =
+    { lawyerName = "Eduard Herman"
+    , lawyerCompany = "Properties LLC."
+    , lawyerAddress = address7
+    }
+
+
+lawyer6 : Lawyer
+lawyer6 =
+    { lawyerName = "Samuel Carter"
+    , lawyerCompany = "Properties LLC."
+    , lawyerAddress = address4
+    }
+
+
+lawyer7 : Lawyer
+lawyer7 =
+    { lawyerName = "Roman Polanski"
+    , lawyerCompany = "Properties LLC."
+    , lawyerAddress = address3
+    }
+
+
+emptyLawyer : Lawyer
+emptyLawyer =
+    { lawyerName = ""
+    , lawyerCompany = ""
+    , lawyerAddress = emptyAddress
     }

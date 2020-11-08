@@ -3,7 +3,7 @@ module Main exposing (main)
 --import Static
 
 import Browser
-import Html exposing (Html, a, b, br, button, col, colgroup, div, em, h3, h5, hr, i, img, input, label, li, p, span, table, td, text, th, tr, ul)
+import Html exposing (Html, a, b, br, button, col, colgroup, div, em, h2, h3, h5, hr, i, img, input, label, li, p, span, table, td, text, th, tr, ul)
 import Html.Attributes exposing (alt, checked, class, classList, height, href, id, name, selected, src, style, type_, value, width)
 import Html.Events exposing (onClick, onInput)
 import MultipleListFilters exposing (..)
@@ -55,6 +55,7 @@ type Msg
     | SetTransSort TransSort
     | SetViewMode ViewMode
     | ChangeStage Stage
+    | EditTransaction TrField String
 
 
 type alias Model =
@@ -84,7 +85,7 @@ type alias Model =
 type ViewMode
     = ViewTransactionsList
     | ViewT Stage Transaction
-    | ViewNewT Stage NewTransaction
+    | ViewNewT Stage Transaction
 
 
 changeViewStage : Stage -> ViewMode -> ViewMode
@@ -111,6 +112,9 @@ type Stage
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        EditTransaction field val ->
+            ( { model | viewMode = updateTransaction field val model.viewMode }, Cmd.none )
+
         ChangeStage s ->
             ( { model | viewMode = changeViewStage s model.viewMode }, Cmd.none )
 
@@ -143,6 +147,29 @@ update msg model =
             ( { model | searchField = "" }, Cmd.none )
 
 
+updateTransaction : TrField -> String -> ViewMode -> ViewMode
+updateTransaction field val vm =
+    case vm of
+        ViewTransactionsList ->
+            vm
+
+        ViewT s t ->
+            case field of
+                ClientF ->
+                    ViewT s { t | client = val }
+
+                OtherClientF ->
+                    ViewT s { t | otherClient = val }
+
+        ViewNewT s t ->
+            case field of
+                ClientF ->
+                    ViewT s { t | client = val }
+
+                OtherClientF ->
+                    ViewT s { t | otherClient = val }
+
+
 
 -- VIEW
 -- main role of view is to orchestrate what "components" are visible at any time
@@ -163,7 +190,7 @@ view model =
                 [ viewTop t
                 , div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
-                    , viewReview model
+                    , viewReview model.viewMode
                     ]
                 ]
 
@@ -199,11 +226,11 @@ view model =
                 [ viewTop t
                 , div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
-                    , viewParties model.viewMode
+                    , viewParties t
                     ]
                 ]
 
-        ViewNewT Lawyers nt ->
+        ViewNewT Lawyers t ->
             div [ class "main" ]
                 [ div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
@@ -211,27 +238,30 @@ view model =
                     ]
                 ]
 
-        ViewNewT Property nt ->
+        ViewNewT Property t ->
             div [ class "main" ]
-                [ div [ class "grid-1-3" ]
+                [ div [ class "grid-1-3" ] [ div [] [], h2 [] [ text "New Transaction" ] ]
+                , div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
                     , viewProperty model.viewMode
                     ]
                 ]
 
-        ViewNewT Parties nt ->
+        ViewNewT Parties t ->
             div [ class "main" ]
-                [ div [ class "grid-1-3" ]
+                [ div [ class "grid-1-3" ] [ div [] [], h2 [] [ text "New Transaction" ] ]
+                , div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
-                    , viewParties model.viewMode
+                    , viewParties t
                     ]
                 ]
 
-        ViewNewT _ nt ->
+        ViewNewT _ t ->
             div [ class "main" ]
-                [ div [ class "grid-1-3" ]
+                [ div [ class "grid-1-3" ] [ div [] [], h2 [] [ text "New Transaction" ] ]
+                , div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
-                    , viewReview model
+                    , viewReview model.viewMode
                     ]
                 ]
 
@@ -316,63 +346,23 @@ viewBCNewT s =
         ]
 
 
-viewReview : Model -> Html Msg
-viewReview model =
-    case model.viewMode of
+
+-- **** REVIEW ****
+-- decided to use the same function for both new and existing transactions
+
+
+viewReview : ViewMode -> Html Msg
+viewReview vm =
+    case vm of
         ViewTransactionsList ->
             div [] []
 
         ViewT s t ->
             div []
-                [ h3 [] [ text "Transaction Details" ]
-                , div [ class "grid-1-1 border-gray" ]
-                    [ div []
-                        [ p [ class "gray padd-7" ] [ b [] [ text "Lawyer/Notary" ] ]
-                        , p [ class "padd-l-7 padd-t-7" ] [ text "Lawyer/Notary" ]
-                        , p [ class "padd-l-7" ] [ b [] [ text <| String.fromInt t.id ] ]
-                        , p [ class "padd-l-7 padd-t-7" ] [ text "Acting for" ]
-                        , p [ class "padd-l-7" ] [ b [] [ text "Purchaser" ] ]
-                        ]
-                    , div []
-                        [ p [ class "gray padd-7" ] [ b [] [ text "Other Lawyer/Notary" ] ]
-                        , p [ class "padd-l-7 padd-t-7" ] [ text "Lawyer/Notary" ]
-                        , p [ class "padd-l-7" ] [ b [] [ text <| String.fromInt t.id ] ]
-                        , p [ class "padd-l-7 padd-t-7" ] [ text "Acting for" ]
-                        , p [ class "padd-l-7" ] [ b [] [ text "Vendor" ] ]
-                        ]
-                    ]
-                , div [ class "grid-1-1 border-gray" ]
-                    [ div []
-                        [ p [ class "gray padd-7" ] [ b [] [ text "Transaction" ] ]
-                        , p [ class "padd-l-7 padd-t-7" ] [ text "Transaction Type" ]
-                        , p [ class "padd-l-7" ] [ b [] [ text <| transTypeToString t.transType ] ]
-                        , p [ class "padd-l-7 padd-t-7" ] [ text "Closing Date" ]
-                        , p [ class "padd-l-7" ] [ b [] [ text t.closing ] ]
-                        ]
-                    , div []
-                        [ p [ class "gray padd-7" ] [ b [] [ text "Property" ] ]
-                        , p [ class "padd-l-7 padd-t-7" ] [ text "Address" ]
-                        , p [ class "padd-l-7" ] [ b [] [ text t.property ] ]
-                        , p [ class "padd-l-7 padd-t-7" ] [ text "Address" ]
-                        , p [ class "padd-l-7" ] [ b [] [ text t.property ] ]
-                        ]
-                    ]
-                , div [ class "grid-1-1 border-gray" ]
-                    [ div []
-                        [ p [ class "gray padd-7" ] [ b [] [ text "Purchaser" ] ]
-                        , p [ class "padd-l-7 padd-t-7" ] [ text "Lawyer/Notary" ]
-                        , p [ class "padd-l-7" ] [ b [] [ text <| String.fromInt t.id ] ]
-                        , p [ class "padd-l-7 padd-t-7" ] [ text "Acting for" ]
-                        , p [ class "padd-l-7" ] [ b [] [ text "Purchaser" ] ]
-                        ]
-                    , div []
-                        [ p [ class "gray padd-7" ] [ b [] [ text "Vendor" ] ]
-                        , p [ class "padd-l-7 padd-t-7" ] [ text "Lawyer/Notary" ]
-                        , p [ class "padd-l-7" ] [ b [] [ text <| String.fromInt t.id ] ]
-                        , p [ class "padd-l-7 padd-t-7" ] [ text "Acting for" ]
-                        , p [ class "padd-l-7" ] [ b [] [ text "Vendor" ] ]
-                        ]
-                    ]
+                [ h3 [] [ text "Overview" ]
+                , viewReviewLawyer s t
+                , viewReviewProperty s t
+                , viewReviewParties s t
                 ]
 
         ViewNewT s nt ->
@@ -386,38 +376,128 @@ viewReviewLawyer s t =
         [ div []
             [ p [ class "gray padd-7" ] [ b [] [ text "Lawyer/Notary" ] ]
             , p [ class "padd-l-7 padd-t-7" ] [ text "Lawyer/Notary" ]
-            , p [ class "padd-l-7" ] [ b [] [ text <| String.fromInt t.id ] ]
+            , p [ class "padd-l-7" ] [ b [] [ text <| t.user.name ] ]
             , p [ class "padd-l-7 padd-t-7" ] [ text "Acting for" ]
-            , p [ class "padd-l-7" ] [ b [] [ text "Purchaser" ] ]
+            , p [ class "padd-l-7" ]
+                [ b []
+                    [ text <|
+                        if t.transType == Sale then
+                            "Vendor"
+
+                        else
+                            "Purchaser"
+                    ]
+                ]
             ]
         , div []
-            [ p [ class "gray padd-7" ] [ b [] [ text "Other Lawyer/Notary" ] ]
+            [ p [ class "gray padd-7" ]
+                [ b [] [ text "Other Lawyer/Notary" ]
+                , button [ class "edit-review", onClick <| ChangeStage Lawyers ] [ text "Edit" ]
+                ]
             , p [ class "padd-l-7 padd-t-7" ] [ text "Lawyer/Notary" ]
-            , p [ class "padd-l-7" ] [ b [] [ text <| String.fromInt t.id ] ]
+            , p [ class "padd-l-7" ] [ b [] [ text t.otherLawyer.lawyerName ] ]
             , p [ class "padd-l-7 padd-t-7" ] [ text "Acting for" ]
-            , p [ class "padd-l-7" ] [ b [] [ text "Vendor" ] ]
+            , p [ class "padd-l-7" ]
+                [ b []
+                    [ text <|
+                        if t.transType == Purchase then
+                            "Vendor"
+
+                        else
+                            "Purchaser"
+                    ]
+                ]
             ]
         ]
 
 
+viewReviewProperty : Stage -> Transaction -> Html Msg
+viewReviewProperty s t =
+    div [ class "grid-1-1 border-gray" ]
+        [ div []
+            [ p [ class "gray padd-7" ] [ b [] [ text "Transaction" ] ]
+            , p [ class "padd-l-7 padd-t-7" ] [ text "Transaction Type" ]
+            , p [ class "padd-l-7" ] [ b [] [ text <| transTypeToString t.transType ] ]
+            , p [ class "padd-l-7 padd-t-7" ] [ text "Closing Date" ]
+            , p [ class "padd-l-7" ] [ b [] [ text t.closing ] ]
+            ]
+        , div []
+            [ p [ class "gray padd-7" ]
+                [ b [] [ text "Property" ]
+                , button [ class "edit-review", onClick <| ChangeStage Property ] [ text "Edit" ]
+                ]
+            , p [ class "padd-l-7 padd-t-7" ] [ text "Address" ]
+            , p [ class "padd-l-7" ] [ b [] [ text t.property.street ] ]
+            , p [ class "padd-l-7" ] [ b [] [ text <| t.property.city ++ ", " ++ t.property.postalCode ] ]
+            ]
+        ]
+
+
+viewReviewParties : Stage -> Transaction -> Html Msg
+viewReviewParties s t =
+    div [ class "grid-1-1 border-gray" ]
+        [ div []
+            [ p [ class "gray padd-7" ] [ b [] [ text "Purchaser" ] ]
+            , p [ class "padd-l-7 padd-t-7" ] [ text t.client ]
+            ]
+        , div []
+            [ p [ class "gray padd-7" ]
+                [ b [] [ text "Vendor" ]
+                , button [ class "edit-review", onClick <| ChangeStage Parties ] [ text "Edit" ]
+                ]
+            , p [ class "padd-l-7 padd-t-7" ] [ text t.otherClient ]
+            ]
+        ]
+
+
+
+-- **** EDIT VIEWS ****
+
+
 viewDisbursements : ViewMode -> Html Msg
 viewDisbursements vm =
-    div [ class "tr-main" ] [ text "DISBURSEMENTS EDIT" ]
+    div [ class "tr-main" ] [ h3 [] [ text "Manage Disbursements" ] ]
 
 
 viewProperty : ViewMode -> Html Msg
 viewProperty vm =
-    div [ class "tr-main" ] [ text "EDIT ADDRESS INFO" ]
+    div [ class "tr-main" ]
+        [ p [] [ h3 [] [ text "Property Details" ] ]
+        , button [ onClick <| SetViewMode ViewTransactionsList ] [ text "Cancel" ]
+        ]
 
 
 viewLawyers : ViewMode -> Html Msg
 viewLawyers vm =
-    div [ class "tr-main" ] [ text "EDIT BOTH PARTIES LAWYERS" ]
+    div [ class "tr-main" ] [ h3 [] [ text "Legal Info" ] ]
 
 
-viewParties : ViewMode -> Html Msg
-viewParties vm =
-    div [ class "tr-main" ] [ text "EDIT PURCHASER / SELLER" ]
+viewParties : Transaction -> Html Msg
+viewParties t =
+    div [ class "tr-main" ]
+        [ h3 [] [ text "Purchaser / Seller" ]
+        , label []
+            [ text <|
+                if t.transType == Purchase then
+                    "Purchaser"
+
+                else
+                    "Vendor"
+            ]
+        , br [] []
+        , input [ value t.client, onInput <| EditTransaction ClientF ] []
+        , br [] []
+        , label []
+            [ text <|
+                if t.transType == Purchase then
+                    "Vendor"
+
+                else
+                    "Purchaser"
+            ]
+        , br [] []
+        , input [ value t.otherClient, onInput <| EditTransaction OtherClientF ] []
+        ]
 
 
 
@@ -486,7 +566,8 @@ viewTransactionDetails t =
 
         --, viewFieldDetails t
         , p [] [ text t.client ]
-        , p [] [ text t.property ]
+
+        --, p [] [ text t.property ]
         , p [] [ text t.closing ]
         , button [ onClick (SetViewMode ViewTransactionsList) ]
             [ text "Cancel" ]
@@ -523,7 +604,7 @@ viewTransactionsSearch model =
                 [ class "item-tr-search" ]
                 [ h3 [] [ text " TRANSACTIONS PLATFORM" ] ]
             , div [ class "item-button" ]
-                [ button [] [ text "Create New Transaction" ]
+                [ button [ onClick (SetViewMode <| ViewNewT Property <| createNewTransaction model) ] [ text "Create New Transaction" ]
                 ]
             ]
         , div [ class "tr-search" ]
@@ -557,6 +638,21 @@ viewTransactionsSearch model =
         ]
 
 
+createNewTransaction : Model -> Transaction
+createNewTransaction model =
+    { id = nextId model.transactions
+    , user = sam
+    , transType = Sale
+    , client = ""
+    , property = emptyAddress
+    , closing = ""
+    , status = Draft
+    , otherLawyer = emptyLawyer
+    , otherClient = "" -- the other person involved in transaction
+    , disbursements = []
+    }
+
+
 
 -- want to create table column headers that do sorting
 -- time for a new viewColHeader function
@@ -568,7 +664,7 @@ viewTransactionsTable tm =
         ([ colgroup []
             [ col [ style "width" "18%" ] []
             , col [ style "width" "22%" ] []
-            , col [ style "width" "33%" ] []
+            , col [ style "width" "37%" ] []
             ]
          , tr [ class "tbl-header" ]
             [ viewColHeader TypeSort tm
@@ -614,7 +710,7 @@ viewTransactionLine t =
     tr []
         [ td [] [ text <| transTypeToString t.transType ]
         , td [] [ text t.client ]
-        , td [] [ text t.property ]
+        , td [] [ text <| t.property.street ++ ", " ++ t.property.city ]
         , td [] [ text t.closing ]
 
         --, td [] [ span [ class "tr-list", onClick <| SetSelectedTrans t.id ] [ text "View" ] ]
