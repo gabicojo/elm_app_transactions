@@ -154,20 +154,20 @@ updateTransaction field val vm =
             vm
 
         ViewT s t ->
-            case field of
-                ClientF ->
-                    ViewT s { t | client = val }
-
-                OtherClientF ->
-                    ViewT s { t | otherClient = val }
+            updateTransactionField ViewT field val s t
 
         ViewNewT s t ->
-            case field of
-                ClientF ->
-                    ViewT s { t | client = val }
+            updateTransactionField ViewNewT field val s t
 
-                OtherClientF ->
-                    ViewT s { t | otherClient = val }
+
+updateTransactionField : (Stage -> Transaction -> ViewMode) -> TrField -> String -> Stage -> Transaction -> ViewMode
+updateTransactionField vmc field val s t =
+    case field of
+        ClientF ->
+            vmc s { t | client = val }
+
+        OtherClientF ->
+            vmc s { t | otherClient = val }
 
 
 
@@ -437,12 +437,28 @@ viewReviewParties : Stage -> Transaction -> Html Msg
 viewReviewParties s t =
     div [ class "grid-1-1 border-gray" ]
         [ div []
-            [ p [ class "gray padd-7" ] [ b [] [ text "Purchaser" ] ]
+            [ p [ class "gray padd-7" ]
+                [ b []
+                    [ text <|
+                        if t.transType == Sale then
+                            "Vendor"
+
+                        else
+                            "Purchaser"
+                    ]
+                ]
             , p [ class "padd-l-7 padd-t-7" ] [ text t.client ]
             ]
         , div []
             [ p [ class "gray padd-7" ]
-                [ b [] [ text "Vendor" ]
+                [ b []
+                    [ text <|
+                        if t.transType == Sale then
+                            "Purchaser"
+
+                        else
+                            "Vendor"
+                    ]
                 , button [ class "edit-review", onClick <| ChangeStage Parties ] [ text "Edit" ]
                 ]
             , p [ class "padd-l-7 padd-t-7" ] [ text t.otherClient ]
@@ -497,6 +513,11 @@ viewParties t =
             ]
         , br [] []
         , input [ value t.otherClient, onInput <| EditTransaction OtherClientF ] []
+        , div []
+            [ button [] [ text "Cancel" ] -- will reload the transaction from list
+            , span [ class "spacing" ] []
+            , button [] [ text "Save changes" ] -- will save the transaction to list
+            ]
         ]
 
 

@@ -352,6 +352,11 @@ span.footer-entry {
   margin-right: 27px;
 }
 
+span.spacing {
+  display: inline-block;
+  width: 57px;
+}
+
 /* SHAPES */
 
 .trapezoid {

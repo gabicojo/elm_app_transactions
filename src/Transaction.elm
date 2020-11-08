@@ -210,9 +210,10 @@ type TrField
     | OtherClientF
 
 
-setTransClient : String -> Transaction -> Transaction
-setTransClient str t =
-    { t | client = str }
+
+--setTransClient : String -> Transaction -> Transaction
+--setTransClient str t =
+--    { t | client = str }
 
 
 type TransFilter
