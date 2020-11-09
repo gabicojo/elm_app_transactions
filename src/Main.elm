@@ -1,7 +1,5 @@
 module Main exposing (main)
 
---import Static
-
 import Browser
 import Html exposing (Html, a, b, br, button, col, colgroup, div, em, h2, h3, h5, hr, i, img, input, label, li, p, span, table, td, text, th, tr, ul)
 import Html.Attributes exposing (alt, checked, class, classList, height, href, id, name, selected, src, style, type_, value, width)
@@ -55,12 +53,14 @@ type Msg
     | SetTransSort TransSort
     | SetViewMode ViewMode
     | ChangeStage Stage
-    | EditTransaction TrField String
+    | EditTransaction TrField String -- edits the transaction held in ViewMode
+    | DiscardEdits
+    | SaveEdits
 
 
 type alias Model =
     { zone : Time.Zone
-    , time : Time.Posix
+    , time : Time.Posix -- is this needed?
     , users : List User -- all users are part of the same organization
     , loggedUserId : Id
     , viewJMOTs : Bool
@@ -85,7 +85,7 @@ type alias Model =
 type ViewMode
     = ViewTransactionsList
     | ViewT Stage Transaction
-    | ViewNewT Stage Transaction
+    | ViewNewT Stage Transaction -- second added to revert to previous state using Cancel
 
 
 changeViewStage : Stage -> ViewMode -> ViewMode
@@ -112,6 +112,48 @@ type Stage
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        DiscardEdits ->
+            case model.viewMode of
+                ViewTransactionsList ->
+                    ( model, Cmd.none )
+
+                -- get the record from the list again
+                ViewT _ t ->
+                    let
+                        foundT =
+                            findTransById t.id model.transactions
+                    in
+                    case foundT of
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                        Just tr ->
+                            ( { model | viewMode = ViewT Review tr }, Cmd.none )
+
+                ViewNewT _ t ->
+                    ( model, Cmd.none )
+
+        SaveEdits ->
+            case model.viewMode of
+                ViewTransactionsList ->
+                    ( model, Cmd.none )
+
+                ViewT _ t ->
+                    ( { model
+                        | transactions = saveTransaction t model.transactions
+                        , viewMode = ViewT Review t
+                      }
+                    , Cmd.none
+                    )
+
+                ViewNewT _ t ->
+                    ( { model
+                        | transactions = saveTransaction t model.transactions
+                        , viewMode = ViewT Review t
+                      }
+                    , Cmd.none
+                    )
+
         EditTransaction field val ->
             ( { model | viewMode = updateTransaction field val model.viewMode }, Cmd.none )
 
@@ -124,10 +166,6 @@ update msg model =
         SetViewMode vm ->
             ( { model | viewMode = vm }, Cmd.none )
 
-        --SetSelectedTrans id ->
-        --    ( { model | selTransaction = selectTransaction id model.transactions }, Cmd.none )
-        --ClearSelectedTransaction ->
-        --    ( { model | selTransaction = Nothing }, Cmd.none )
         SetTransSort s ->
             -- if the sort is the same, toggle sortAscending
             -- if the sort is different, then switch sort and set sortAscending True
@@ -514,38 +552,21 @@ viewParties t =
         , br [] []
         , input [ value t.otherClient, onInput <| EditTransaction OtherClientF ] []
         , div []
-            [ button [] [ text "Cancel" ] -- will reload the transaction from list
+            [ button [ onClick DiscardEdits ] [ text "Cancel" ] -- will reload the transaction from list
             , span [ class "spacing" ] []
-            , button [] [ text "Save changes" ] -- will save the transaction to list
+            , button [ onClick SaveEdits ] [ text "Save changes" ] -- will save the transaction to list
             ]
         ]
 
 
 
--- *** OLD FUCNTIONS ***
---viewTransaction : Transaction -> Html Msg
---viewTransaction t =
---    div []
---        [ div [ id "tr-top" ]
---            [ viewReturn
---            , viewTransRes t
---            , viewTransTopButtons
---            ]
---        , div [ id "tr-bottom" ]
---            [ viewTransBreadCrumb t
---            , div [ id "tr-bottom-main" ]
---                [ viewTransactionDetails t
---                ]
---            ]
+-- *** OLD FUNCTIONS ***
+--viewTransBreadCrumb : Transaction -> Html Msg
+--viewTransBreadCrumb t =
+--    div [ id "tr-bread-crumb" ]
+--        [ h5 [] [ text "Transaction Details" ]
+--        , h5 [] [ text "Disbursements" ]
 --        ]
-
-
-viewTransBreadCrumb : Transaction -> Html Msg
-viewTransBreadCrumb t =
-    div [ id "tr-bread-crumb" ]
-        [ h5 [] [ text "Transaction Details" ]
-        , h5 [] [ text "Disbursements" ]
-        ]
 
 
 viewTransRes : Transaction -> Html msg
@@ -652,16 +673,13 @@ viewTransactionsSearch model =
                 ]
                 []
             , label [] [ text "My Organization" ]
-
-            --, hr [] []
-            --, text <| boolToString model.viewJMOTs
             ]
         ]
 
 
 createNewTransaction : Model -> Transaction
 createNewTransaction model =
-    { id = nextId model.transactions
+    { id = nextId model.transactions -- automatically give the next available id
     , user = sam
     , transType = Sale
     , client = ""

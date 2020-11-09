@@ -27,10 +27,14 @@ type alias Lawyer =
 type alias Address =
     { street : String
     , city : String
-
-    --, province : String
     , postalCode : String
     }
+
+
+addressToString : Address -> String
+addressToString address =
+    List.intersperse ", " [ address.street, address.city, address.postalCode ]
+        |> List.foldr (++) ""
 
 
 type PayeeType
@@ -69,7 +73,7 @@ payMethodToString pm =
 
 type alias Disbursement =
     { payee : Payee
-    , payoutAmount : Float
+    , payAmount : Float
     , payMethod : PayMethod
     , payAccount : String
     , completed : Maybe Time.Posix -- Nothing == disbursement not completed
@@ -79,7 +83,6 @@ type alias Disbursement =
 type TransStatus
     = Draft
     | DepositReq
-    | SignatureReq
     | Completed
 
 
@@ -91,9 +94,6 @@ transStatusToString tst =
 
         DepositReq ->
             "Deposit Required"
-
-        SignatureReq ->
-            "Signature Required"
 
         Completed ->
             "Completed"
@@ -205,6 +205,10 @@ type alias Transaction =
     }
 
 
+
+-- identify what field has to be updated by the EditTransaction TrField String message
+
+
 type TrField
     = ClientF
     | OtherClientF
@@ -264,8 +268,8 @@ filteredTransactions tf lts =
                 |> List.filter (transactionContains str)
 
 
-selectTransaction : Int -> List Transaction -> Maybe Transaction
-selectTransaction id lts =
+findTransById : Id -> List Transaction -> Maybe Transaction
+findTransById id lts =
     case lts of
         [] ->
             Nothing
@@ -275,17 +279,40 @@ selectTransaction id lts =
                 Just t
 
             else
-                selectTransaction id rest
+                findTransById id rest
 
 
+isInList : (a -> comparable) -> a -> List a -> Bool
+isInList f a ls =
+    case ls of
+        [] ->
+            False
 
---maxId : Id
---nextId : List Transaction -> Id
---nextId lts =
---    let lIds = List.map (\t -> t.id) lts
---    case lIds of
---        [] -> 1
---        _ -> 1 + max_ lIds
+        x :: rest ->
+            case f a == f x of
+                True ->
+                    True
+
+                False ->
+                    isInList f a rest
+
+
+saveTransaction : Transaction -> List Transaction -> List Transaction
+saveTransaction t lts =
+    case isInList .id t lts of
+        False ->
+            t :: lts
+
+        True ->
+            List.map
+                (\x ->
+                    if x.id == t.id then
+                        t
+
+                    else
+                        x
+                )
+                lts
 
 
 nextId : List Transaction -> Id
@@ -447,7 +474,7 @@ t4 =
     , client = "Cheyene Booker"
     , property = address4
     , closing = "2023/11/05"
-    , status = SignatureReq
+    , status = DepositReq
     , otherLawyer = lawyer4
     , otherClient = "Carlos Ramos"
     , disbursements = []
