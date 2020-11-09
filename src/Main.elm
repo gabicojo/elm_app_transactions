@@ -43,6 +43,11 @@ init jsTime =
     )
 
 
+type Mode
+    = Old
+    | New
+
+
 type Msg
     = AdjustTimeZone Time.Zone
     | SearchFieldEdited String
@@ -56,6 +61,7 @@ type Msg
     | EditTransaction TrField String -- edits the transaction held in ViewMode
     | DiscardEdits
     | SaveEdits
+    | SaveEditsAndContinue
 
 
 type alias Model =
@@ -85,7 +91,7 @@ type alias Model =
 type ViewMode
     = ViewTransactionsList
     | ViewT Stage Transaction
-    | ViewNewT Stage Transaction -- second added to revert to previous state using Cancel
+    | ViewNewT Stage Transaction Transaction -- second added to revert to previous state using Cancel
 
 
 changeViewStage : Stage -> ViewMode -> ViewMode
@@ -97,8 +103,8 @@ changeViewStage s vm =
         ViewT _ t ->
             ViewT s t
 
-        ViewNewT _ nt ->
-            ViewNewT s nt
+        ViewNewT _ t te ->
+            ViewNewT s t te
 
 
 type Stage
@@ -112,6 +118,8 @@ type Stage
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        -- *** TRANSACTION EDITING ***
+        -- discards block changes
         DiscardEdits ->
             case model.viewMode of
                 ViewTransactionsList ->
@@ -125,14 +133,15 @@ update msg model =
                     in
                     case foundT of
                         Nothing ->
-                            ( model, Cmd.none )
+                            ( { model | viewMode = ViewTransactionsList }, Cmd.none )
 
                         Just tr ->
                             ( { model | viewMode = ViewT Review tr }, Cmd.none )
 
-                ViewNewT _ t ->
-                    ( model, Cmd.none )
+                ViewNewT _ t te ->
+                    ( { model | viewMode = ViewNewT Review t t }, Cmd.none )
 
+        -- existing transaction and new transaction get saved to transactions list
         SaveEdits ->
             case model.viewMode of
                 ViewTransactionsList ->
@@ -146,13 +155,27 @@ update msg model =
                     , Cmd.none
                     )
 
-                ViewNewT _ t ->
+                ViewNewT _ t te ->
                     ( { model
                         | transactions = saveTransaction t model.transactions
                         , viewMode = ViewT Review t
                       }
                     , Cmd.none
                     )
+
+        SaveEditsAndContinue ->
+            case model.viewMode of
+                ViewNewT Property _ te ->
+                    ( { model | viewMode = ViewNewT Lawyers te te }, Cmd.none )
+
+                ViewNewT Lawyers _ te ->
+                    ( { model | viewMode = ViewNewT Parties te te }, Cmd.none )
+
+                ViewNewT Parties _ te ->
+                    ( { model | viewMode = ViewNewT Review te te }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
 
         EditTransaction field val ->
             ( { model | viewMode = updateTransaction field val model.viewMode }, Cmd.none )
@@ -192,20 +215,10 @@ updateTransaction field val vm =
             vm
 
         ViewT s t ->
-            updateTransactionField ViewT field val s t
+            updateTransactionField field val t |> ViewT s
 
-        ViewNewT s t ->
-            updateTransactionField ViewNewT field val s t
-
-
-updateTransactionField : (Stage -> Transaction -> ViewMode) -> TrField -> String -> Stage -> Transaction -> ViewMode
-updateTransactionField vmc field val s t =
-    case field of
-        ClientF ->
-            vmc s { t | client = val }
-
-        OtherClientF ->
-            vmc s { t | otherClient = val }
+        ViewNewT s t te ->
+            updateTransactionField field val te |> ViewNewT s t
 
 
 
@@ -246,7 +259,7 @@ view model =
                 [ viewTop t
                 , div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
-                    , viewLawyers model.viewMode
+                    , viewLawyers t Old
                     ]
                 ]
 
@@ -255,7 +268,7 @@ view model =
                 [ viewTop t
                 , div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
-                    , viewProperty model.viewMode
+                    , viewProperty t Old
                     ]
                 ]
 
@@ -264,37 +277,37 @@ view model =
                 [ viewTop t
                 , div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
-                    , viewParties t
+                    , viewParties t Old
                     ]
                 ]
 
-        ViewNewT Lawyers t ->
+        ViewNewT Lawyers t te ->
             div [ class "main" ]
                 [ div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
-                    , viewLawyers model.viewMode
+                    , viewLawyers te New
                     ]
                 ]
 
-        ViewNewT Property t ->
+        ViewNewT Property t te ->
             div [ class "main" ]
                 [ div [ class "grid-1-3" ] [ div [] [], h2 [] [ text "New Transaction" ] ]
                 , div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
-                    , viewProperty model.viewMode
+                    , viewProperty te New
                     ]
                 ]
 
-        ViewNewT Parties t ->
+        ViewNewT Parties t te ->
             div [ class "main" ]
                 [ div [ class "grid-1-3" ] [ div [] [], h2 [] [ text "New Transaction" ] ]
                 , div [ class "grid-1-3" ]
                     [ viewBreadCrumb model.viewMode
-                    , viewParties t
+                    , viewParties te New
                     ]
                 ]
 
-        ViewNewT _ t ->
+        ViewNewT _ t te ->
             div [ class "main" ]
                 [ div [ class "grid-1-3" ] [ div [] [], h2 [] [ text "New Transaction" ] ]
                 , div [ class "grid-1-3" ]
@@ -342,16 +355,16 @@ viewBreadCrumb vm =
         ViewT _ _ ->
             viewBCT Review
 
-        ViewNewT Lawyers _ ->
+        ViewNewT Lawyers _ _ ->
             viewBCNewT Lawyers
 
-        ViewNewT Property _ ->
+        ViewNewT Property _ _ ->
             viewBCNewT Property
 
-        ViewNewT Parties _ ->
+        ViewNewT Parties _ _ ->
             viewBCNewT Parties
 
-        ViewNewT _ _ ->
+        ViewNewT _ _ _ ->
             viewBCNewT Review
 
 
@@ -403,7 +416,7 @@ viewReview vm =
                 , viewReviewParties s t
                 ]
 
-        ViewNewT s nt ->
+        ViewNewT s t te ->
             div [ class "tr-main" ]
                 [ p [] [ text <| "Lawyer/Notary: " ++ "Keith Smith" ] ]
 
@@ -513,21 +526,21 @@ viewDisbursements vm =
     div [ class "tr-main" ] [ h3 [] [ text "Manage Disbursements" ] ]
 
 
-viewProperty : ViewMode -> Html Msg
-viewProperty vm =
+viewProperty : Transaction -> Mode -> Html Msg
+viewProperty t mode =
     div [ class "tr-main" ]
         [ p [] [ h3 [] [ text "Property Details" ] ]
         , button [ onClick <| SetViewMode ViewTransactionsList ] [ text "Cancel" ]
         ]
 
 
-viewLawyers : ViewMode -> Html Msg
-viewLawyers vm =
+viewLawyers : Transaction -> Mode -> Html Msg
+viewLawyers t mode =
     div [ class "tr-main" ] [ h3 [] [ text "Legal Info" ] ]
 
 
-viewParties : Transaction -> Html Msg
-viewParties t =
+viewParties : Transaction -> Mode -> Html Msg
+viewParties t mode =
     div [ class "tr-main" ]
         [ h3 [] [ text "Purchaser / Seller" ]
         , label []
@@ -552,9 +565,10 @@ viewParties t =
         , br [] []
         , input [ value t.otherClient, onInput <| EditTransaction OtherClientF ] []
         , div []
-            [ button [ onClick DiscardEdits ] [ text "Cancel" ] -- will reload the transaction from list
+            [ button [ onClick DiscardEdits ] [ text "Cancel" ]
             , span [ class "spacing" ] []
-            , button [ onClick SaveEdits ] [ text "Save changes" ] -- will save the transaction to list
+            , button [ classList [ ( "hidden", mode == Old ) ], onClick SaveEditsAndContinue ] [ text "Save and Continue" ]
+            , button [ classList [ ( "hidden", mode == New ) ], onClick SaveEdits ] [ text "Save changes" ]
             ]
         ]
 
@@ -646,7 +660,7 @@ viewTransactionsSearch model =
                 [ class "item-tr-search" ]
                 [ h3 [] [ text " TRANSACTIONS PLATFORM" ] ]
             , div [ class "item-button" ]
-                [ button [ onClick (SetViewMode <| ViewNewT Property <| createNewTransaction model) ] [ text "Create New Transaction" ]
+                [ button [ onClick (SetViewMode <| ViewNewT Property (createNewTransaction model) (createNewTransaction model)) ] [ text "Create New Transaction" ]
                 ]
             ]
         , div [ class "tr-search" ]

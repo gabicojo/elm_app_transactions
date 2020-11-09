@@ -210,14 +210,94 @@ type alias Transaction =
 
 
 type TrField
-    = ClientF
+    = TypeF
+    | StatusF
+    | ClientF
     | OtherClientF
+    | AddressStreetF
+    | AddressCityF
+    | AddressPostalCodeF
+    | ClosingF
+    | OLnameF
+    | OLcompanyF
+    | OLaddressStreetF
+    | OLaddressCityF
+    | OLaddressPostalCodeF
 
 
 
---setTransClient : String -> Transaction -> Transaction
---setTransClient str t =
---    { t | client = str }
+-- update transaction and also validation
+
+
+updateTransactionField : TrField -> String -> Transaction -> Transaction
+updateTransactionField field val t =
+    case field of
+        OLnameF ->
+            { t | otherLawyer = Lawyer val t.otherLawyer.lawyerCompany t.otherLawyer.lawyerAddress }
+
+        OLcompanyF ->
+            { t | otherLawyer = Lawyer t.otherLawyer.lawyerName val t.otherLawyer.lawyerAddress }
+
+        OLaddressStreetF ->
+            { t
+                | otherLawyer =
+                    Lawyer t.otherLawyer.lawyerName
+                        t.otherLawyer.lawyerCompany
+                        (Address val t.otherLawyer.lawyerAddress.city t.otherLawyer.lawyerAddress.postalCode)
+            }
+
+        OLaddressCityF ->
+            { t
+                | otherLawyer =
+                    Lawyer t.otherLawyer.lawyerName
+                        t.otherLawyer.lawyerCompany
+                        (Address t.otherLawyer.lawyerAddress.street val t.otherLawyer.lawyerAddress.postalCode)
+            }
+
+        OLaddressPostalCodeF ->
+            { t
+                | otherLawyer =
+                    Lawyer t.otherLawyer.lawyerName
+                        t.otherLawyer.lawyerCompany
+                        (Address t.otherLawyer.lawyerAddress.street t.otherLawyer.lawyerAddress.city val)
+            }
+
+        ClosingF ->
+            { t | closing = val }
+
+        AddressStreetF ->
+            { t | property = Address val t.property.city t.property.postalCode }
+
+        AddressCityF ->
+            { t | property = Address t.property.street val t.property.postalCode }
+
+        AddressPostalCodeF ->
+            { t | property = Address t.property.street t.property.city val }
+
+        StatusF ->
+            case val of
+                "Deposit Required" ->
+                    { t | status = DepositReq }
+
+                "Completed" ->
+                    { t | status = Completed }
+
+                _ ->
+                    { t | status = Draft }
+
+        TypeF ->
+            case val of
+                "Purchase" ->
+                    { t | transType = Purchase }
+
+                _ ->
+                    { t | transType = Sale }
+
+        ClientF ->
+            { t | client = val }
+
+        OtherClientF ->
+            { t | otherClient = val }
 
 
 type TransFilter
