@@ -9,6 +9,18 @@ type alias Id =
     Int
 
 
+
+-- logged lawyer
+
+
+type alias User =
+    { userId : Int
+    , orgId : Int
+    , name : String
+    , email : String
+    }
+
+
 type alias Payee =
     { payeeType : PayeeType
     , payeeName : String
@@ -402,16 +414,6 @@ nextId lts =
         |> Maybe.withDefault 0
         --|> Basics.floor
         |> (+) 1
-
-
-type alias User =
-    { userId : Int
-    , orgId : Int
-    , name : String
-    , email : String
-
-    --, password : String
-    }
 
 
 

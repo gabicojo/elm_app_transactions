@@ -38,11 +38,23 @@ button {
   cursor: pointer;
 }
 
+.warning {
+  background-color: #eee;
+  color: #333;
+}
+
+select {
+  width: 70%;
+  font-size: 111%;
+  border-radius: 3px;
+  padding: 7px;
+}
+
 /* TABLE */
 
 table {
   border-collapse: collapse;
-  width: 90%;
+  width: 100%;
 }
 
 th {
@@ -141,8 +153,9 @@ td {
 }
 
 input {
+  width: 70%;
   font-size: 110%;
-  border: 1px solid green;
+  border: 1px solid gray;
   border-radius: 4px;
   margin-bottom: 12px;
   padding: 7px;
@@ -248,7 +261,7 @@ a:active {
 .tr-search {
   border: 1px solid #777;
   padding: 17px;
-  width: 80%;
+  width: 100%;
   margin-bottom: 17px;
 }
 
@@ -371,7 +384,7 @@ span.spacing {
 .container-grid-search {
   display: grid;
   grid-template-columns: 3fr 1fr;
-  width: 80%;
+  width: 100%;
 }
 
 

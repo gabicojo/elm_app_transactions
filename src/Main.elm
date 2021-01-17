@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, a, b, br, button, col, colgroup, div, em, h2, h3, h5, hr, i, img, input, label, li, p, span, table, td, text, th, tr, ul)
+import Html exposing (Html, a, b, br, button, col, colgroup, div, em, h2, h3, h5, hr, i, img, input, label, li, option, p, select, span, table, td, text, th, tr, ul)
 import Html.Attributes exposing (alt, checked, class, classList, height, href, id, name, selected, src, style, type_, value, width)
 import Html.Events exposing (onClick, onInput)
 import MultipleListFilters exposing (..)
@@ -157,7 +157,7 @@ update msg model =
 
                 ViewNewT _ t te ->
                     ( { model
-                        | transactions = saveTransaction t model.transactions
+                        | transactions = saveTransaction te model.transactions
                         , viewMode = ViewT Review t
                       }
                     , Cmd.none
@@ -240,8 +240,8 @@ view model =
             div [ class "main" ]
                 [ viewTop t
                 , div [ class "grid-1-3" ]
-                    [ viewBreadCrumb model.viewMode
-                    , viewReview model.viewMode
+                    [ viewBreadCrumb Review Old
+                    , viewReview t Old
                     ]
                 ]
 
@@ -249,7 +249,7 @@ view model =
             div [ class "main" ]
                 [ viewTop t
                 , div [ class "grid-1-3" ]
-                    [ viewBreadCrumb model.viewMode
+                    [ viewBreadCrumb Disbursement Old
                     , viewDisbursements model.viewMode
                     ]
                 ]
@@ -258,7 +258,7 @@ view model =
             div [ class "main" ]
                 [ viewTop t
                 , div [ class "grid-1-3" ]
-                    [ viewBreadCrumb model.viewMode
+                    [ viewBreadCrumb Lawyers Old
                     , viewLawyers t Old
                     ]
                 ]
@@ -267,7 +267,7 @@ view model =
             div [ class "main" ]
                 [ viewTop t
                 , div [ class "grid-1-3" ]
-                    [ viewBreadCrumb model.viewMode
+                    [ viewBreadCrumb Property Old
                     , viewProperty t Old
                     ]
                 ]
@@ -276,15 +276,16 @@ view model =
             div [ class "main" ]
                 [ viewTop t
                 , div [ class "grid-1-3" ]
-                    [ viewBreadCrumb model.viewMode
+                    [ viewBreadCrumb Parties Old
                     , viewParties t Old
                     ]
                 ]
 
         ViewNewT Lawyers t te ->
             div [ class "main" ]
-                [ div [ class "grid-1-3" ]
-                    [ viewBreadCrumb model.viewMode
+                [ div [ class "grid-1-3" ] [ div [] [], h2 [] [ text "New Transaction" ] ]
+                , div [ class "grid-1-3" ]
+                    [ viewBreadCrumb Lawyers New
                     , viewLawyers te New
                     ]
                 ]
@@ -293,7 +294,7 @@ view model =
             div [ class "main" ]
                 [ div [ class "grid-1-3" ] [ div [] [], h2 [] [ text "New Transaction" ] ]
                 , div [ class "grid-1-3" ]
-                    [ viewBreadCrumb model.viewMode
+                    [ viewBreadCrumb Property New
                     , viewProperty te New
                     ]
                 ]
@@ -302,7 +303,7 @@ view model =
             div [ class "main" ]
                 [ div [ class "grid-1-3" ] [ div [] [], h2 [] [ text "New Transaction" ] ]
                 , div [ class "grid-1-3" ]
-                    [ viewBreadCrumb model.viewMode
+                    [ viewBreadCrumb Parties New
                     , viewParties te New
                     ]
                 ]
@@ -311,8 +312,8 @@ view model =
             div [ class "main" ]
                 [ div [ class "grid-1-3" ] [ div [] [], h2 [] [ text "New Transaction" ] ]
                 , div [ class "grid-1-3" ]
-                    [ viewBreadCrumb model.viewMode
-                    , viewReview model.viewMode
+                    [ viewBreadCrumb Review New
+                    , viewReview te New
                     ]
                 ]
 
@@ -343,58 +344,32 @@ viewReturn =
         ]
 
 
-viewBreadCrumb : ViewMode -> Html Msg
-viewBreadCrumb vm =
-    case vm of
-        ViewTransactionsList ->
-            viewBCT Review
+viewBreadCrumb : Stage -> Mode -> Html Msg
+viewBreadCrumb s mode =
+    case mode of
+        New ->
+            div [ class "tr-bread-crumb" ]
+                [ p [ classList [ ( "bc-active", s == Property ) ] ] [ text "Property" ]
+                , p
+                    [ classList [ ( "bc-active", s == Lawyers ) ] ]
+                    [ text "Transaction Details" ]
+                , p [ classList [ ( "bc-active", s == Parties ) ] ] [ text "Parties" ]
+                , p [ classList [ ( "bc-active", s == Review ) ] ] [ text "Review" ]
+                ]
 
-        ViewT Disbursement _ ->
-            viewBCT Disbursement
-
-        ViewT _ _ ->
-            viewBCT Review
-
-        ViewNewT Lawyers _ _ ->
-            viewBCNewT Lawyers
-
-        ViewNewT Property _ _ ->
-            viewBCNewT Property
-
-        ViewNewT Parties _ _ ->
-            viewBCNewT Parties
-
-        ViewNewT _ _ _ ->
-            viewBCNewT Review
-
-
-viewBCT : Stage -> Html Msg
-viewBCT s =
-    div [ class "tr-bread-crumb" ]
-        [ p
-            [ classList [ ( "bc-active", s /= Disbursement ) ]
-            , onClick <| ChangeStage Review
-            ]
-            [ text "Transaction Details" ]
-        , p
-            [ classList [ ( "bc-active", s == Disbursement ) ]
-            , onClick <| ChangeStage Disbursement
-            ]
-            [ text "Disbursements" ]
-        ]
-
-
-viewBCNewT : Stage -> Html Msg
-viewBCNewT s =
-    div [ class "tr-bread-crumb" ]
-        [ p
-            [ classList [ ( "bc-active", s == Lawyers ) ]
-            ]
-            [ text "Transaction Details" ]
-        , p [ classList [ ( "bc-active", s == Property ) ] ] [ text "Property" ]
-        , p [ classList [ ( "bc-active", s == Parties ) ] ] [ text "Parties" ]
-        , p [ classList [ ( "bc-active", s == Review ) ] ] [ text "Review" ]
-        ]
+        Old ->
+            div [ class "tr-bread-crumb" ]
+                [ p
+                    [ classList [ ( "bc-active", s /= Disbursement ) ]
+                    , onClick <| ChangeStage Review
+                    ]
+                    [ text "Transaction Details" ]
+                , p
+                    [ classList [ ( "bc-active", s == Disbursement ) ]
+                    , onClick <| ChangeStage Disbursement
+                    ]
+                    [ text "Disbursements" ]
+                ]
 
 
 
@@ -402,27 +377,23 @@ viewBCNewT s =
 -- decided to use the same function for both new and existing transactions
 
 
-viewReview : ViewMode -> Html Msg
-viewReview vm =
-    case vm of
-        ViewTransactionsList ->
-            div [] []
-
-        ViewT s t ->
-            div []
-                [ h3 [] [ text "Overview" ]
-                , viewReviewLawyer s t
-                , viewReviewProperty s t
-                , viewReviewParties s t
-                ]
-
-        ViewNewT s t te ->
-            div [ class "tr-main" ]
-                [ p [] [ text <| "Lawyer/Notary: " ++ "Keith Smith" ] ]
+viewReview : Transaction -> Mode -> Html Msg
+viewReview t mode =
+    div []
+        [ h3 [] [ text "Overview" ]
+        , button
+            [ classList [ ( "hidden", mode == Old ) ]
+            , onClick SaveEdits
+            ]
+            [ text "Save New Transaction" ]
+        , viewReviewLawyer t
+        , viewReviewProperty t
+        , viewReviewParties t
+        ]
 
 
-viewReviewLawyer : Stage -> Transaction -> Html Msg
-viewReviewLawyer s t =
+viewReviewLawyer : Transaction -> Html Msg
+viewReviewLawyer t =
     div [ class "grid-1-1 border-gray" ]
         [ div []
             [ p [ class "gray padd-7" ] [ b [] [ text "Lawyer/Notary" ] ]
@@ -462,8 +433,8 @@ viewReviewLawyer s t =
         ]
 
 
-viewReviewProperty : Stage -> Transaction -> Html Msg
-viewReviewProperty s t =
+viewReviewProperty : Transaction -> Html Msg
+viewReviewProperty t =
     div [ class "grid-1-1 border-gray" ]
         [ div []
             [ p [ class "gray padd-7" ] [ b [] [ text "Transaction" ] ]
@@ -484,8 +455,8 @@ viewReviewProperty s t =
         ]
 
 
-viewReviewParties : Stage -> Transaction -> Html Msg
-viewReviewParties s t =
+viewReviewParties : Transaction -> Html Msg
+viewReviewParties t =
     div [ class "grid-1-1 border-gray" ]
         [ div []
             [ p [ class "gray padd-7" ]
@@ -519,6 +490,12 @@ viewReviewParties s t =
 
 
 -- **** EDIT VIEWS ****
+-- *** OPTION *** - very good polymorphic definition
+
+
+viewOption : (a -> String) -> a -> a -> Html msg
+viewOption valToString setValue val =
+    option [ selected <| setValue == val ] [ text <| valToString val ]
 
 
 viewDisbursements : ViewMode -> Html Msg
@@ -529,14 +506,72 @@ viewDisbursements vm =
 viewProperty : Transaction -> Mode -> Html Msg
 viewProperty t mode =
     div [ class "tr-main" ]
-        [ p [] [ h3 [] [ text "Property Details" ] ]
-        , button [ onClick <| SetViewMode ViewTransactionsList ] [ text "Cancel" ]
+        [ h3 [] [ text "Property Details" ]
+        , label [] [ text "Street" ]
+        , br [] []
+        , input [ value t.property.street, onInput <| EditTransaction AddressStreetF ] []
+        , br [] []
+        , label [] [ text "City" ]
+        , br [] []
+        , input [ value t.property.city, onInput <| EditTransaction AddressCityF ] []
+        , br [] []
+        , label [] [ text "Postal Code" ]
+        , br [] []
+        , input [ value t.property.postalCode, onInput <| EditTransaction AddressPostalCodeF ] []
+        , br [] []
+        , label [] [ text "Transaction Type" ]
+        , br [] []
+        , select [ onInput <| EditTransaction TypeF ] <|
+            List.map (viewOption transTypeToString t.transType) [ Sale, Purchase ]
+        , br [] []
+        , label [] [ text "Closing Date" ]
+        , br [] []
+        , input [ value t.closing, onInput <| EditTransaction ClosingF ] []
+        , viewEditButtons mode
+        ]
+
+
+viewEditButtons : Mode -> Html Msg
+viewEditButtons mode =
+    div []
+        [ button [ class "warning", onClick DiscardEdits ] [ text "Cancel" ]
+        , span [ class "spacing" ] []
+        , button [ classList [ ( "hidden", mode == Old ) ], onClick SaveEditsAndContinue ] [ text "Save and Continue" ]
+        , button [ classList [ ( "hidden", mode == New ) ], onClick SaveEdits ] [ text "Save changes" ]
         ]
 
 
 viewLawyers : Transaction -> Mode -> Html Msg
 viewLawyers t mode =
-    div [ class "tr-main" ] [ h3 [] [ text "Legal Info" ] ]
+    div [ class "tr-main" ]
+        [ h3 [] [ text "Legal Teams" ]
+        , p [] [ text "Lawyer / Notary" ]
+        , p [] [ b [] [ text t.user.name ] ]
+        , p [] [ text "Email" ]
+        , p [] [ b [] [ text t.user.email ] ]
+        , hr [] []
+        , label [] [ text "Other Lawyer / Notary" ]
+        , br [] []
+        , input [ value t.otherLawyer.lawyerName, onInput <| EditTransaction OLnameF ] []
+        , br [] []
+        , label [] [ text "Bussiness" ]
+        , br [] []
+        , input [ value t.otherLawyer.lawyerCompany, onInput <| EditTransaction OLcompanyF ] []
+        , br [] []
+        , label [] [ text "Street" ]
+        , br [] []
+        , input [ value t.otherLawyer.lawyerAddress.street, onInput <| EditTransaction OLaddressStreetF ] []
+        , br [] []
+        , label [] [ text "City" ]
+        , br [] []
+        , input [ value t.otherLawyer.lawyerAddress.city, onInput <| EditTransaction OLaddressCityF ] []
+        , br [] []
+        , label [] [ text "Postal Code" ]
+        , br [] []
+        , input [ value t.otherLawyer.lawyerAddress.postalCode, onInput <| EditTransaction OLaddressPostalCodeF ] []
+        , br [] []
+        , viewEditButtons mode
+        ]
 
 
 viewParties : Transaction -> Mode -> Html Msg
@@ -564,12 +599,7 @@ viewParties t mode =
             ]
         , br [] []
         , input [ value t.otherClient, onInput <| EditTransaction OtherClientF ] []
-        , div []
-            [ button [ onClick DiscardEdits ] [ text "Cancel" ]
-            , span [ class "spacing" ] []
-            , button [ classList [ ( "hidden", mode == Old ) ], onClick SaveEditsAndContinue ] [ text "Save and Continue" ]
-            , button [ classList [ ( "hidden", mode == New ) ], onClick SaveEdits ] [ text "Save changes" ]
-            ]
+        , viewEditButtons mode
         ]
 
 
@@ -660,7 +690,13 @@ viewTransactionsSearch model =
                 [ class "item-tr-search" ]
                 [ h3 [] [ text " TRANSACTIONS PLATFORM" ] ]
             , div [ class "item-button" ]
-                [ button [ onClick (SetViewMode <| ViewNewT Property (createNewTransaction model) (createNewTransaction model)) ] [ text "Create New Transaction" ]
+                [ button
+                    [ onClick
+                        (SetViewMode <|
+                            ViewNewT Property (createNewTransaction model) (createNewTransaction model)
+                        )
+                    ]
+                    [ text "Create New Transaction" ]
                 ]
             ]
         , div [ class "tr-search" ]
